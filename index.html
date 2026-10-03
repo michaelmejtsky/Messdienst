@@ -1,479 +1,1253 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+  >
 
   <meta name="theme-color" content="#25346f">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="Messdienst">
 
-  <link rel="manifest" href="./manifest.json?v=2">
-  <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png?v=2">
-  <link rel="icon" type="image/png" sizes="512x512" href="./icon-512.png?v=2">
-  <link rel="apple-touch-icon" href="./apple-touch-icon.png?v=2">
+  <meta
+    name="application-name"
+    content="Messdienst"
+  >
 
-  <title>Messdienst – Feuerwehr St. Pölten-Stadt</title>
+  <meta
+    name="apple-mobile-web-app-title"
+    content="Messdienst"
+  >
+
+  <meta
+    name="apple-mobile-web-app-capable"
+    content="yes"
+  >
+
+  <meta
+    name="apple-mobile-web-app-status-bar-style"
+    content="default"
+  >
+
+
+  <title>
+    Messdienst – Feuerwehr St. Pölten-Stadt
+  </title>
+
+
+  <!-- =====================================================
+       PWA
+       ===================================================== -->
+
+  <link
+    rel="manifest"
+    href="./manifest.json"
+  >
+
+
+  <!-- =====================================================
+       ICONS
+       ===================================================== -->
+
+  <link
+    rel="icon"
+    type="image/png"
+    sizes="512x512"
+    href="./messdienst-icon.png?v=20261003"
+  >
+
+  <link
+    rel="shortcut icon"
+    type="image/png"
+    href="./messdienst-icon.png?v=20261003"
+  >
+
+  <link
+    rel="apple-touch-icon"
+    sizes="180x180"
+    href="./messdienst-icon.png?v=20261003"
+  >
+
 
   <style>
-    *{box-sizing:border-box}
 
-    html,body{
+    * {
+      box-sizing:border-box;
+    }
+
+
+    html,
+    body {
+
       margin:0;
+      padding:0;
+
       width:100%;
       height:100%;
+
       overflow:hidden;
-      background:#f3f5f9;
-      font-family:Arial,Helvetica,sans-serif;
+
+      background:#f4f6fa;
+
+      font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
     }
 
-    #app{
+
+    /* =====================================================
+       GOOGLE APPS SCRIPT
+       ===================================================== */
+
+    iframe {
+
       position:fixed;
-      inset:0;
-      width:100%;
-      height:100%;
-      background:#f3f5f9;
-    }
 
-    #messdienstFrame{
+      inset:0;
+
       width:100%;
       height:100%;
+
       border:0;
+
       display:block;
-      background:#f3f5f9;
+
+      background:#f4f6fa;
     }
 
-    #loading{
+
+    /* =====================================================
+       LOADING
+       ===================================================== */
+
+    #loading {
+
       position:fixed;
+
       inset:0;
-      z-index:50;
+
+      z-index:9999;
+
       display:flex;
+
       align-items:center;
       justify-content:center;
-      flex-direction:column;
-      gap:14px;
+
+      padding:22px;
+
       background:
-        radial-gradient(circle at top right,rgba(255,255,255,.14),transparent 30%),
-        linear-gradient(135deg,#25346f,#34499a);
-      color:white;
-      font-weight:900;
+        linear-gradient(
+          135deg,
+          #f4f6fa,
+          #eef1fb
+        );
     }
 
-    #loading img{
-      width:100px;
-      height:100px;
-      object-fit:contain;
-      background:white;
+
+    .card {
+
+      width:min(420px,100%);
+
+      padding:28px 22px;
+
+      border:
+        1px solid #e4e8f0;
+
       border-radius:22px;
-      padding:7px;
-      box-shadow:0 15px 40px rgba(0,0,0,.20);
-    }
 
-    .spinner{
-      width:38px;
-      height:38px;
-      border:4px solid rgba(255,255,255,.28);
-      border-top-color:#fff;
-      border-radius:50%;
-      animation:spin .8s linear infinite;
-    }
-
-    @keyframes spin{to{transform:rotate(360deg)}}
-
-    #installOverlay{
-      position:fixed;
-      inset:0;
-      z-index:9999;
-      display:none;
-      align-items:flex-end;
-      justify-content:center;
-      padding:16px;
-      background:rgba(15,22,42,.72);
-      backdrop-filter:blur(7px);
-      -webkit-backdrop-filter:blur(7px);
-    }
-
-    #installOverlay.show{
-      display:flex;
-    }
-
-    .install-card{
-      width:min(450px,100%);
-      margin-bottom:env(safe-area-inset-bottom);
-      padding:26px 21px;
-      border-radius:25px;
       background:#fff;
-      box-shadow:0 28px 80px rgba(0,0,0,.32);
+
+      box-shadow:
+        0 10px 35px
+        rgba(38,54,111,.10);
+
       text-align:center;
     }
 
-    .install-icon{
+
+    .app-icon {
+
+      position:relative;
+
+      width:88px;
+      height:88px;
+
+      margin:
+        0 auto 14px;
+    }
+
+
+    .app-icon img {
+
+      width:88px;
+      height:88px;
+
+      object-fit:contain;
+
+      display:block;
+
+      padding:5px;
+
+      border-radius:22px;
+
+      background:#fff;
+
+      border:
+        1px solid #e4e8f0;
+
+      box-shadow:
+        0 8px 22px
+        rgba(38,54,111,.10);
+    }
+
+
+    .brand {
+
+      margin-bottom:7px;
+
+      color:#34499a;
+
+      font-size:10px;
+
+      font-weight:900;
+
+      letter-spacing:.08em;
+    }
+
+
+    h1 {
+
+      margin:0;
+
+      color:#25346f;
+
+      font-size:24px;
+
+      line-height:1.15;
+    }
+
+
+    p {
+
+      margin:
+        8px 0 0;
+
+      color:#718096;
+
+      font-size:12px;
+
+      line-height:1.45;
+    }
+
+
+    .spinner {
+
+      width:38px;
+      height:38px;
+
+      margin:
+        20px auto 0;
+
+      border:
+        4px solid #e4e8f0;
+
+      border-top-color:
+        #34499a;
+
+      border-radius:50%;
+
+      animation:
+        spin .8s linear infinite;
+    }
+
+
+    @keyframes spin {
+
+      to {
+        transform:
+          rotate(360deg);
+      }
+
+    }
+
+
+
+    /* =====================================================
+       PWA INSTALLATION
+       ===================================================== */
+
+    #installOverlay {
+
+      position:fixed;
+
+      inset:0;
+
+      z-index:99999;
+
+      display:none;
+
+      align-items:flex-end;
+      justify-content:center;
+
+      padding:16px;
+
+      background:
+        rgba(15,22,42,.72);
+
+      backdrop-filter:
+        blur(7px);
+
+      -webkit-backdrop-filter:
+        blur(7px);
+    }
+
+
+    #installOverlay.show {
+
+      display:flex;
+    }
+
+
+    .install-card {
+
+      width:
+        min(450px,100%);
+
+      padding:
+        26px 21px;
+
+      margin-bottom:
+        env(safe-area-inset-bottom);
+
+      border-radius:25px;
+
+      background:#fff;
+
+      text-align:center;
+
+      box-shadow:
+        0 25px 80px
+        rgba(0,0,0,.32);
+    }
+
+
+    .install-icon {
+
       width:82px;
       height:82px;
-      margin:0 auto 12px;
+
+      margin:
+        0 auto 14px;
+
       display:flex;
+
       align-items:center;
       justify-content:center;
-      overflow:hidden;
-      border-radius:20px;
-      background:#edf0f7;
+
+      border-radius:22px;
+
+      background:#fff;
+
+      border:
+        1px solid #e4e8f0;
+
+      box-shadow:
+        0 8px 22px
+        rgba(38,54,111,.10);
     }
 
-    .install-icon img{
-      width:100%;
-      height:100%;
+
+    .install-icon img {
+
+      width:72px;
+      height:72px;
+
       object-fit:contain;
+
+      border-radius:18px;
     }
 
-    .install-brand{
-      color:#748094;
-      font-size:10px;
+
+    .install-brand {
+
+      color:#34499a;
+
+      font-size:9px;
+
       font-weight:900;
-      letter-spacing:.09em;
+
+      letter-spacing:.08em;
     }
 
-    .install-card h2{
-      margin:7px 0 8px;
+
+    .install-card h2 {
+
+      margin:
+        7px 0 8px;
+
       color:#25346f;
+
       font-size:23px;
+
       font-weight:900;
     }
 
-    .install-card p{
-      margin:8px 0 0;
+
+    .install-card p {
+
       color:#718096;
+
       font-size:13px;
+
       line-height:1.5;
     }
 
-    .install-button{
+
+    .install-button {
+
       width:100%;
+
       min-height:54px;
+
       margin-top:20px;
+
       border:0;
+
       border-radius:14px;
-      background:linear-gradient(135deg,#25346f,#34499a);
+
+      background:
+        linear-gradient(
+          135deg,
+          #25346f,
+          #34499a
+        );
+
       color:#fff;
+
       font-size:14px;
+
       font-weight:900;
+
       cursor:pointer;
     }
 
-    .install-later{
+
+    .install-later {
+
       width:100%;
+
       min-height:48px;
+
       margin-top:9px;
+
       border:0;
+
       border-radius:14px;
+
       background:#edf0f5;
+
       color:#354052;
+
       font-size:12px;
+
       font-weight:900;
+
       cursor:pointer;
     }
 
-    #iosHelp{
+
+    #iosHelp {
+
       display:none;
+
       margin-top:16px;
+
       padding:17px;
+
       border-radius:15px;
+
       background:#eef1fb;
+
       color:#25346f;
+
       font-size:13px;
+
       line-height:1.5;
     }
 
-    .browser-help{
+
+    .browser-help {
+
       margin-top:15px;
+
       padding:15px;
+
       border-radius:15px;
+
       background:#eef1fb;
+
       color:#25346f;
+
       font-size:12px;
+
       line-height:1.6;
     }
+
+
   </style>
+
 </head>
+
 
 <body>
 
-  <div id="app">
-    <iframe id="messdienstFrame" allowfullscreen></iframe>
-  </div>
+
+  <!-- =====================================================
+       GOOGLE APPS SCRIPT
+       ===================================================== -->
+
+  <iframe
+
+    id="messdienstFrame"
+
+    src="https://script.google.com/macros/s/AKfycbynydjfkgfRffIcRS02QZWVjErBRE8AuQbfkigoWw__4A6OZ1WX5HmbbECWfhFclU9q/exec"
+
+    allow="
+      clipboard-read;
+      clipboard-write
+    "
+
+  ></iframe>
+
+
+
+  <!-- =====================================================
+       LOADING
+       ===================================================== -->
 
   <div id="loading">
-    <img src="./icon-512.png?v=2" alt="Feuerwehr St. Pölten-Stadt">
-    <div>Messdienst wird geladen …</div>
-    <div class="spinner"></div>
-  </div>
 
-  <div id="installOverlay">
-    <div class="install-card">
+    <div class="card">
 
-      <div class="install-icon">
-        <img src="./icon-192.png?v=2" alt="Messdienst">
+      <div class="app-icon">
+
+        <img
+          src="./messdienst-icon.png?v=20261003"
+          alt="Messdienst"
+        >
+
       </div>
 
-      <div class="install-brand">
+
+      <div class="brand">
+
         FEUERWEHR ST. PÖLTEN-STADT
+
       </div>
 
-      <h2>Messdienst installieren</h2>
 
-      <p id="installText">
-        Der Messdienst kann als App auf diesem Gerät installiert werden.
+      <h1>
+        Messdienst
+      </h1>
+
+
+      <p>
+        Messdienst wird geladen …
       </p>
 
-      <div id="iosHelp">
-        <strong>iPhone / iPad</strong>
-        <br><br>
-        Tippe in Safari auf
-        <br><br>
-        <strong>Teilen ⬆️</strong>
-        <br><br>
-        und anschließend auf
-        <br>
-        <strong>„Zum Home-Bildschirm“</strong>
-      </div>
 
-      <button
-        id="installButton"
-        class="install-button"
-        type="button"
-        style="display:none;"
-      >
-        📲 App installieren
-      </button>
-
-      <button
-        id="installLater"
-        class="install-later"
-        type="button"
-      >
-        Jetzt nicht
-      </button>
+      <div class="spinner"></div>
 
     </div>
+
   </div>
 
+
+
+  <!-- =====================================================
+       INSTALLATION
+       ===================================================== -->
+
+  <div id="installOverlay">
+
+    <div class="install-card">
+
+
+      <div class="install-icon">
+
+        <img
+          src="./messdienst-icon.png?v=20261003"
+          alt="Messdienst"
+        >
+
+      </div>
+
+
+      <div class="install-brand">
+
+        FEUERWEHR ST. PÖLTEN-STADT
+
+      </div>
+
+
+      <h2>
+        Messdienst installieren
+      </h2>
+
+
+      <p id="installText">
+
+        Messdienst kann als App
+        auf diesem Gerät installiert werden.
+
+      </p>
+
+
+
+      <!-- APPLE -->
+
+      <div id="iosHelp">
+
+        <strong>
+          iPhone / iPad
+        </strong>
+
+        <br><br>
+
+        Tippe unten in Safari auf
+
+        <br><br>
+
+        <strong>
+          Teilen ⬆️
+        </strong>
+
+        <br><br>
+
+        und anschließend auf
+
+        <br>
+
+        <strong>
+          „Zum Home-Bildschirm“
+        </strong>
+
+      </div>
+
+
+
+      <!-- INSTALL BUTTON -->
+
+      <button
+
+        id="installButton"
+
+        class="install-button"
+
+        style="display:none;"
+
+      >
+
+        📲 App installieren
+
+      </button>
+
+
+
+      <button
+
+        id="installLater"
+
+        class="install-later"
+
+      >
+
+        Jetzt nicht
+
+      </button>
+
+
+    </div>
+
+  </div>
+
+
+
   <script>
-    const MESSDIENST_URL =
-      'https://script.google.com/macros/s/AKfycbynydjfkgfRffIcRS02QZWVjErBRE8AuQbfkigoWw__4A6OZ1WX5HmbbECWfhFclU9q/exec';
 
-    function openMessdienst() {
-      const loading =
-        document.getElementById('loading');
+    /* =====================================================
+       ELEMENTE
+       ===================================================== */
 
-      const frame =
-        document.getElementById('messdienstFrame');
+    const frame =
+      document.getElementById(
+        'messdienstFrame'
+      );
 
-      frame.onload = () => {
-        loading.style.display = 'none';
-      };
 
-      const separator =
-        MESSDIENST_URL.includes('?')
-          ? '&'
-          : '?';
+    const loading =
+      document.getElementById(
+        'loading'
+      );
 
-      frame.src =
-        MESSDIENST_URL +
-        separator +
-        't=' +
-        Date.now();
-    }
-
-    document.addEventListener(
-      'DOMContentLoaded',
-      openMessdienst
-    );
-  </script>
-
-  <script>
-    let deferredInstallPrompt = null;
-
-    const installParams =
-      new URLSearchParams(window.location.search);
-
-    const installRequested =
-      installParams.get('install') === '1';
 
     const installOverlay =
-      document.getElementById('installOverlay');
+      document.getElementById(
+        'installOverlay'
+      );
+
 
     const installButton =
-      document.getElementById('installButton');
+      document.getElementById(
+        'installButton'
+      );
+
 
     const installLater =
-      document.getElementById('installLater');
+      document.getElementById(
+        'installLater'
+      );
+
 
     const installText =
-      document.getElementById('installText');
+      document.getElementById(
+        'installText'
+      );
+
 
     const iosHelp =
-      document.getElementById('iosHelp');
-
-    function isPwaInstalled() {
-      return (
-        window.matchMedia('(display-mode: standalone)').matches ||
-        window.navigator.standalone === true
+      document.getElementById(
+        'iosHelp'
       );
-    }
 
-    function cleanInstallUrl() {
-      const url =
-        new URL(window.location.href);
 
-      url.searchParams.delete('install');
-      url.searchParams.delete('source');
 
-      history.replaceState(
-        {},
-        '',
-        url.pathname + url.search + url.hash
-      );
-    }
+    /* =====================================================
+       LOADING AUSBLENDEN
+       ===================================================== */
 
-    function showAndroidInstall() {
-      if (isPwaInstalled()) {
-        cleanInstallUrl();
-        return;
+    frame.addEventListener(
+      'load',
+      function() {
+
+        loading.style.display =
+          'none';
+
       }
+    );
 
-      iosHelp.style.display = 'none';
-      installButton.style.display = 'block';
 
-      installText.innerHTML =
-        'Der Messdienst kann als App auf diesem Gerät installiert werden.';
+    setTimeout(
+      function() {
 
-      installOverlay.classList.add('show');
+        loading.style.display =
+          'none';
+
+      },
+      10000
+    );
+
+
+
+    /* =====================================================
+       PWA PARAMETER
+       ===================================================== */
+
+    const params =
+      new URLSearchParams(
+        location.search
+      );
+
+
+    const installRequested =
+      params.get('install') === '1';
+
+
+
+    /* =====================================================
+       IST APP BEREITS INSTALLIERT?
+       ===================================================== */
+
+    function isInstalled() {
+
+      return (
+
+        window.matchMedia(
+          '(display-mode: standalone)'
+        ).matches
+
+        ||
+
+        window.navigator.standalone === true
+
+      );
+
     }
 
-    function showIosInstall() {
-      installButton.style.display = 'none';
-      iosHelp.style.display = 'block';
 
-      installText.innerHTML =
-        'Installiere den Messdienst auf deinem Home-Bildschirm.';
 
-      installOverlay.classList.add('show');
-    }
+    /* =====================================================
+       PWA INSTALL EVENT
+       ===================================================== */
 
-    function showBrowserFallback() {
-      installButton.style.display = 'none';
-      iosHelp.style.display = 'none';
+    let deferredPrompt =
+      null;
 
-      installText.innerHTML = `
-        <b>Messdienst wurde geöffnet.</b>
-
-        <div class="browser-help">
-          Falls dein Browser keinen Installationsdialog anzeigt:
-          <br><br>
-          <b>☰ Browser-Menü</b>
-          <br>
-          → <b>App installieren</b>
-          <br>
-          oder <b>Zum Startbildschirm hinzufügen</b>
-        </div>
-      `;
-
-      installOverlay.classList.add('show');
-    }
 
     window.addEventListener(
+
       'beforeinstallprompt',
+
       function(event) {
+
+
+        console.log(
+          'Messdienst: Installation verfügbar'
+        );
+
+
         event.preventDefault();
 
-        deferredInstallPrompt =
+
+        deferredPrompt =
           event;
+
 
         if (
           installRequested &&
-          !isPwaInstalled()
+          !isInstalled()
         ) {
-          showAndroidInstall();
+
+          showInstall();
+
         }
+
       }
+
     );
 
+
+
+    /* =====================================================
+       INSTALLATION ANZEIGEN
+       ===================================================== */
+
+    function showInstall() {
+
+
+      if (isInstalled()) {
+
+        cleanUrl();
+
+        return;
+      }
+
+
+      iosHelp.style.display =
+        'none';
+
+
+      installButton.style.display =
+        'block';
+
+
+      installText.innerHTML =
+        `
+        Messdienst kann als App
+        auf diesem Gerät installiert werden.
+        `;
+
+
+      installOverlay.classList.add(
+        'show'
+      );
+
+    }
+
+
+
+    /* =====================================================
+       IOS
+       ===================================================== */
+
+    function showIosInstall() {
+
+
+      installButton.style.display =
+        'none';
+
+
+      iosHelp.style.display =
+        'block';
+
+
+      installText.innerHTML =
+        `
+        Installiere Messdienst
+        auf deinem Home-Bildschirm.
+        `;
+
+
+      installOverlay.classList.add(
+        'show'
+      );
+
+    }
+
+
+
+    /* =====================================================
+       SAMSUNG FALLBACK
+       ===================================================== */
+
+    function showSamsungHelp() {
+
+
+      installButton.style.display =
+        'none';
+
+
+      iosHelp.style.display =
+        'none';
+
+
+      installText.innerHTML =
+        `
+        <b>
+          Messdienst wurde geöffnet.
+        </b>
+
+        <div class="browser-help">
+
+          Falls dein Browser keinen
+          Installationsdialog anzeigt:
+
+          <br><br>
+
+          <b>
+            ☰ Browser-Menü
+          </b>
+
+          <br>
+
+          → <b>Seite hinzufügen zu</b>
+
+          <br>
+
+          → <b>Startbildschirm</b>
+
+        </div>
+        `;
+
+
+      installOverlay.classList.add(
+        'show'
+      );
+
+    }
+
+
+
+    /* =====================================================
+       INSTALL BUTTON
+       ===================================================== */
+
     installButton.addEventListener(
+
       'click',
+
       async function() {
 
-        if (!deferredInstallPrompt) {
-          showBrowserFallback();
+
+        if (!deferredPrompt) {
+
+          showSamsungHelp();
+
           return;
         }
 
-        deferredInstallPrompt.prompt();
 
-        await deferredInstallPrompt.userChoice;
+        deferredPrompt.prompt();
 
-        deferredInstallPrompt = null;
 
-        installOverlay.classList.remove('show');
+        const result =
+          await deferredPrompt.userChoice;
 
-        cleanInstallUrl();
+
+        console.log(
+          'Installation:',
+          result.outcome
+        );
+
+
+        deferredPrompt =
+          null;
+
+
+        installOverlay.classList.remove(
+          'show'
+        );
+
+
+        cleanUrl();
+
       }
+
     );
+
+
+
+    /* =====================================================
+       SPÄTER
+       ===================================================== */
 
     installLater.addEventListener(
+
       'click',
+
       function() {
-        installOverlay.classList.remove('show');
-        cleanInstallUrl();
+
+
+        installOverlay.classList.remove(
+          'show'
+        );
+
+
+        cleanUrl();
+
       }
+
     );
+
+
+
+    /* =====================================================
+       URL AUFRÄUMEN
+       ===================================================== */
+
+    function cleanUrl() {
+
+
+      const url =
+        new URL(
+          location.href
+        );
+
+
+      url.searchParams.delete(
+        'install'
+      );
+
+
+      url.searchParams.delete(
+        'source'
+      );
+
+
+      history.replaceState(
+
+        {},
+
+        '',
+
+        url.pathname +
+        url.search +
+        url.hash
+
+      );
+
+    }
+
+
+
+    /* =====================================================
+       INSTALLATION ABGESCHLOSSEN
+       ===================================================== */
 
     window.addEventListener(
+
       'appinstalled',
+
       function() {
-        deferredInstallPrompt = null;
-        installOverlay.classList.remove('show');
-        cleanInstallUrl();
+
+
+        console.log(
+          'Messdienst installiert'
+        );
+
+
+        deferredPrompt =
+          null;
+
+
+        installOverlay.classList.remove(
+          'show'
+        );
+
+
+        cleanUrl();
+
       }
+
     );
 
-    const isIos =
-      /iphone|ipad|ipod/i.test(navigator.userAgent) ||
-      (
-        navigator.platform === 'MacIntel' &&
-        navigator.maxTouchPoints > 1
-      );
 
-    if (
-      installRequested &&
-      isIos &&
-      !isPwaInstalled()
-    ) {
-      setTimeout(
-        showIosInstall,
-        700
-      );
-    }
 
-    if (
-      installRequested &&
-      isPwaInstalled()
-    ) {
-      cleanInstallUrl();
-    }
+    /* =====================================================
+       START
+       ===================================================== */
 
-    if ('serviceWorker' in navigator) {
-      window.addEventListener(
-        'load',
-        function() {
-          navigator.serviceWorker
-            .register('./service-worker.js?v=2')
-            .catch(function(error) {
-              console.log('SW:', error);
-            });
+    window.addEventListener(
+
+      'load',
+
+      function() {
+
+
+        if (!installRequested) {
+
+          return;
         }
+
+
+        if (isInstalled()) {
+
+          cleanUrl();
+
+          return;
+        }
+
+
+        const ua =
+          navigator.userAgent;
+
+
+        const ios =
+
+          /iPhone|iPad|iPod/i.test(ua)
+
+          ||
+
+          (
+            navigator.platform ===
+              'MacIntel'
+
+            &&
+
+            navigator.maxTouchPoints > 1
+          );
+
+
+        /* APPLE */
+
+        if (ios) {
+
+
+          setTimeout(
+
+            showIosInstall,
+
+            600
+
+          );
+
+
+          return;
+        }
+
+
+
+        /*
+         ANDROID / CHROME / SAMSUNG
+
+         Browser bekommt 5 Sekunden Zeit,
+         beforeinstallprompt auszulösen.
+        */
+
+        setTimeout(
+
+          function() {
+
+
+            if (deferredPrompt) {
+
+              showInstall();
+
+            }
+
+            else {
+
+              showSamsungHelp();
+
+            }
+
+          },
+
+          5000
+
+        );
+
+      }
+
+    );
+
+
+
+    /* =====================================================
+       SERVICE WORKER
+       ===================================================== */
+
+    if (
+      'serviceWorker' in navigator
+    ) {
+
+
+      window.addEventListener(
+
+        'load',
+
+        function() {
+
+
+          navigator.serviceWorker
+            .register(
+              './sw.js'
+            )
+
+            .then(
+              function(registration) {
+
+                console.log(
+                  'Messdienst Service Worker aktiv:',
+                  registration.scope
+                );
+
+              }
+            )
+
+            .catch(
+              function(error) {
+
+                console.error(
+                  'Service Worker Fehler:',
+                  error
+                );
+
+              }
+            );
+
+        }
+
       );
+
     }
+
+
   </script>
+
 
 </body>
 </html>
