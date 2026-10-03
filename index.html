@@ -313,49 +313,154 @@
 
     let deferredPrompt = null;
 
-    const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
-    const isStandalone =
-      window.matchMedia('(display-mode: standalone)').matches ||
-      window.navigator.standalone === true;
+    const installParams =
+      new URLSearchParams(window.location.search);
 
-    window.addEventListener('beforeinstallprompt', event => {
-      event.preventDefault();
-      deferredPrompt = event;
+    const installRequested =
+      installParams.get('install') === '1';
 
-      if (!isStandalone && sessionStorage.getItem('mdInstallLater') !== '1') {
-        installOverlay.classList.add('show');
-      }
-    });
+    const isIos =
+      /iphone|ipad|ipod/i.test(navigator.userAgent) ||
+      (
+        navigator.platform === 'MacIntel' &&
+        navigator.maxTouchPoints > 1
+      );
 
-    if (isIos && !isStandalone && sessionStorage.getItem('mdInstallLater') !== '1') {
-      setTimeout(() => {
-        iosHelp.style.display = 'block';
-        installButton.textContent = 'Installationshinweis anzeigen';
-        installOverlay.classList.add('show');
-      }, 1200);
+    function isPwaInstalled() {
+      return (
+        window.matchMedia('(display-mode: standalone)').matches ||
+        window.navigator.standalone === true
+      );
     }
 
-    installButton.addEventListener('click', async () => {
-      if (isIos) {
-        iosHelp.style.display = 'block';
+    function cleanInstallUrl() {
+      const url = new URL(window.location.href);
+
+      url.searchParams.delete('install');
+      url.searchParams.delete('source');
+
+      history.replaceState(
+        {},
+        '',
+        url.pathname + url.search + url.hash
+      );
+    }
+
+    function showAndroidInstall() {
+      if (isPwaInstalled()) {
+        cleanInstallUrl();
         return;
       }
 
-      if (!deferredPrompt) {
+      iosHelp.style.display = 'none';
+      installButton.style.display = 'block';
+      installButton.textContent = '📲 App installieren';
+
+      installOverlay.classList.add('show');
+    }
+
+    function showIosInstall() {
+      if (isPwaInstalled()) {
+        cleanInstallUrl();
+        return;
+      }
+
+      installButton.style.display = 'none';
+      iosHelp.style.display = 'block';
+
+      installOverlay.classList.add('show');
+    }
+
+    window.addEventListener(
+      'beforeinstallprompt',
+      function(event) {
+        event.preventDefault();
+
+        deferredPrompt = event;
+
+        /*
+          Installationsfenster NUR dann zeigen,
+          wenn die App-Zentrale ?install=1 geschickt hat.
+          Beim normalen Öffnen gibt es KEINEN Hinweis.
+        */
+        if (
+          installRequested &&
+          !isPwaInstalled()
+        ) {
+          showAndroidInstall();
+        }
+      }
+    );
+
+    installButton.addEventListener(
+      'click',
+      async function() {
+
+        if (!deferredPrompt) {
+          return;
+        }
+
+        deferredPrompt.prompt();
+
+        await deferredPrompt.userChoice;
+
+        deferredPrompt = null;
+
         installOverlay.classList.remove('show');
-        return;
+
+        cleanInstallUrl();
       }
+    );
 
-      deferredPrompt.prompt();
-      await deferredPrompt.userChoice;
-      deferredPrompt = null;
-      installOverlay.classList.remove('show');
-    });
+    installLater.addEventListener(
+      'click',
+      function() {
 
-    installLater.addEventListener('click', () => {
-      sessionStorage.setItem('mdInstallLater', '1');
-      installOverlay.classList.remove('show');
-    });
+        installOverlay.classList.remove('show');
+
+        cleanInstallUrl();
+      }
+    );
+
+    window.addEventListener(
+      'appinstalled',
+      function() {
+
+        deferredPrompt = null;
+
+        installOverlay.classList.remove('show');
+
+        cleanInstallUrl();
+      }
+    );
+
+    /*
+      iPhone/iPad:
+      Apple stellt keinen programmierbaren PWA-Systemdialog bereit.
+      Deshalb wird der bestehende Apple-Hinweis nur dann gezeigt,
+      wenn die App bewusst über "Installieren / Öffnen"
+      aus der App-Zentrale gestartet wurde.
+    */
+    if (
+      installRequested &&
+      isIos &&
+      !isPwaInstalled()
+    ) {
+      setTimeout(
+        showIosInstall,
+        700
+      );
+    }
+
+    /*
+      Falls die App bereits installiert ist, Installationsparameter entfernen.
+    */
+    if (
+      installRequested &&
+      isPwaInstalled()
+    ) {
+      cleanInstallUrl();
+    }
   </script>
 
 </body>
