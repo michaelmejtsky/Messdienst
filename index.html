@@ -43,7 +43,7 @@
 
   <link
     rel="manifest"
-    href="./manifest.json"
+    href="./manifest.json?v=20261003b"
   >
 
 
@@ -55,19 +55,19 @@
     rel="icon"
     type="image/png"
     sizes="512x512"
-    href="./messdienst-icon.png?v=20261003"
+    href="./messdienst-icon.png?v=20261003b"
   >
 
   <link
     rel="shortcut icon"
     type="image/png"
-    href="./messdienst-icon.png?v=20261003"
+    href="./messdienst-icon.png?v=20261003b"
   >
 
   <link
     rel="apple-touch-icon"
     sizes="180x180"
-    href="./messdienst-icon.png?v=20261003"
+    href="./messdienst-icon.png?v=20261003b"
   >
 
 
@@ -516,6 +516,7 @@
     src="https://script.google.com/macros/s/AKfycbynydjfkgfRffIcRS02QZWVjErBRE8AuQbfkigoWw__4A6OZ1WX5HmbbECWfhFclU9q/exec"
 
     allow="
+      camera;
       clipboard-read;
       clipboard-write
     "
@@ -535,7 +536,7 @@
       <div class="app-icon">
 
         <img
-          src="./messdienst-icon.png?v=20261003"
+          src="./messdienst-icon.png?v=20261003b"
           alt="Messdienst"
         >
 
@@ -579,7 +580,7 @@
       <div class="install-icon">
 
         <img
-          src="./messdienst-icon.png?v=20261003"
+          src="./messdienst-icon.png?v=20261003b"
           alt="Messdienst"
         >
 
@@ -764,6 +765,25 @@
 
     const installRequested =
       params.get('install') === '1';
+
+
+    /*
+      Wenn die App aus der App-Zentrale mit ?install=1 kommt,
+      wird das Installationsfenster sofort sichtbar.
+      Android aktiviert den Installieren-Button sobald
+      beforeinstallprompt verfügbar ist.
+    */
+    if (installRequested) {
+      installText.innerHTML =
+        'Messdienst wird für die Installation vorbereitet …';
+
+      installButton.style.display =
+        'none';
+
+      installOverlay.classList.add(
+        'show'
+      );
+    }
 
 
 
@@ -1214,7 +1234,7 @@
 
           navigator.serviceWorker
             .register(
-              './sw.js'
+              './sw.js?v=20261003b'
             )
 
             .then(
