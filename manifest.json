@@ -1,8 +1,8 @@
 {
   "id": "./",
-  "name": "Messdienst – Feuerwehr St. Pölten",
+  "name": "Messdienst – Feuerwehr St. Pölten-Stadt",
   "short_name": "Messdienst",
-  "description": "Messdienst- und Prüfröhrchen-Datenbank der Feuerwehr St. Pölten-Stadt",
+  "description": "Messdienst-Datenbank der Feuerwehr St. Pölten-Stadt: Prüfröhrchen, Messgeräte, Messschemata und Analyse.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
