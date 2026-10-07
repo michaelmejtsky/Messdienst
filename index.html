@@ -43,7 +43,7 @@
 
   <link
     rel="manifest"
-    href="./manifest.json?v=20261007-v7-rc2"
+    href="./manifest.json?v=20261008-v7-rc5"
   >
 
 
@@ -55,19 +55,19 @@
     rel="icon"
     type="image/png"
     sizes="512x512"
-    href="./messdienst-icon.png?v=20261007-v7-rc2"
+    href="./messdienst-icon.png?v=20261008-v7-rc5"
   >
 
   <link
     rel="shortcut icon"
     type="image/png"
-    href="./messdienst-icon.png?v=20261007-v7-rc2"
+    href="./messdienst-icon.png?v=20261008-v7-rc5"
   >
 
   <link
     rel="apple-touch-icon"
     sizes="180x180"
-    href="./messdienst-icon.png?v=20261007-v7-rc2"
+    href="./messdienst-icon.png?v=20261008-v7-rc5"
   >
 
 
@@ -497,6 +497,18 @@
     }
 
 
+    /* =====================================================
+       SCANNER – läuft auf GitHub/PWA-Ebene, nicht im Apps-Script-iframe
+       ===================================================== */
+    #scannerOverlay{position:fixed;inset:0;z-index:120000;display:none;align-items:center;justify-content:center;padding:16px;background:rgba(12,18,35,.84);backdrop-filter:blur(6px)}
+    #scannerOverlay.show{display:flex}
+    .scanner-card{width:min(560px,100%);max-height:94vh;overflow:auto;background:#fff;border-radius:24px;padding:18px;box-shadow:0 30px 80px rgba(0,0,0,.38)}
+    .scanner-card h2{margin:0;color:#25346f}.scanner-card p{margin:6px 0 12px}
+    #scannerVideo{width:100%;max-height:58vh;background:#111;border-radius:16px;display:block}
+    .scanner-status{padding:10px 12px;margin-top:10px;border-radius:12px;background:#eef1fb;color:#25346f;font-size:12px;line-height:1.5}
+    .scanner-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.scanner-actions button{min-height:46px;border:0;border-radius:12px;padding:0 13px;font-weight:800;cursor:pointer}.scanner-primary{background:#25346f;color:#fff}.scanner-secondary{background:#edf0f5;color:#354052}.scanner-danger{background:#fee4e2;color:#912018}
+
+
   </style>
 
 </head>
@@ -536,7 +548,7 @@
       <div class="app-icon">
 
         <img
-          src="./messdienst-icon.png?v=20261007-v7-rc2"
+          src="./messdienst-icon.png?v=20261008-v7-rc5"
           alt="Messdienst"
         >
 
@@ -580,7 +592,7 @@
       <div class="install-icon">
 
         <img
-          src="./messdienst-icon.png?v=20261007-v7-rc2"
+          src="./messdienst-icon.png?v=20261008-v7-rc5"
           alt="Messdienst"
         >
 
@@ -677,6 +689,22 @@
 
 
 
+
+
+  <div id="scannerOverlay">
+    <div class="scanner-card">
+      <h2 id="scannerTitle">Code scannen</h2>
+      <p>Die Kamera läuft direkt in der installierten GitHub-PWA. Dadurch wird die Kamera nicht mehr durch das eingebettete Apps-Script-Fenster blockiert.</p>
+      <video id="scannerVideo" playsinline autoplay muted></video>
+      <div id="scannerStatus" class="scanner-status">Scanner bereit …</div>
+      <div class="scanner-actions">
+        <button class="scanner-secondary" id="scannerManual">⌨️ Manuell eingeben</button>
+        <button class="scanner-danger" id="scannerCancel">Abbrechen</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/@zxing/browser@0.1.1/umd/zxing-browser.min.js"></script>
   <script>
 
     /* =====================================================
@@ -1234,7 +1262,7 @@
 
           navigator.serviceWorker
             .register(
-              './sw.js?v=20261007-v7-rc2'
+              './sw.js?v=20261008-v7-rc5'
             )
 
             .then(
@@ -1266,7 +1294,109 @@
     }
 
 
-  </script>
+  
+
+    /* =====================================================
+       SCANNER-BRIDGE
+       ===================================================== */
+    let mdScanStream=null;
+    let mdScanActive=false;
+    let mdScanDetector=null;
+    let mdZxingControls=null;
+    let mdScanRequester=null;
+    const scannerOverlay=document.getElementById('scannerOverlay');
+    const scannerVideo=document.getElementById('scannerVideo');
+    const scannerStatus=document.getElementById('scannerStatus');
+    const scannerTitle=document.getElementById('scannerTitle');
+
+    window.addEventListener('message', event => {
+      const data=event.data||{};
+      if(data.type!=='MD_SCAN_REQUEST') return;
+      mdScanRequester=event.source||null;
+      openTopScanner(data.label||'Code scannen');
+    });
+
+    async function openTopScanner(label){
+      stopTopScanner();
+      scannerTitle.textContent=label||'Code scannen';
+      scannerStatus.textContent='Kameraberechtigung wird angefordert …';
+      scannerOverlay.classList.add('show');
+      try{
+        if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia) throw new Error('Dieser Browser stellt keinen Kamerazugriff bereit.');
+        try{
+          mdScanStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1920},height:{ideal:1080}},audio:false});
+        }catch(first){
+          mdScanStream=await navigator.mediaDevices.getUserMedia({video:true,audio:false});
+        }
+        scannerVideo.srcObject=mdScanStream;
+        await scannerVideo.play();
+        await new Promise(r=>setTimeout(r,350));
+        if(!scannerVideo.videoWidth) throw new Error('Kamera geöffnet, aber kein Videobild verfügbar.');
+        if('BarcodeDetector' in window){
+          let supported=[];try{supported=await BarcodeDetector.getSupportedFormats()}catch(e){}
+          const wanted=['data_matrix','qr_code','code_128','code_39','ean_13','ean_8','upc_a','upc_e'];
+          const formats=wanted.filter(x=>!supported.length||supported.includes(x));
+          mdScanDetector=new BarcodeDetector(formats.length?{formats}:undefined);
+          mdScanActive=true;
+          scannerStatus.innerHTML=`Kamera aktiv (${scannerVideo.videoWidth}×${scannerVideo.videoHeight}). <b>Code ruhig und möglichst groß ins Bild halten.</b>`;
+          scanTopFrame();
+        }else if(window.ZXingBrowser&&ZXingBrowser.BrowserMultiFormatReader){
+          // Safari/iOS und Browser ohne BarcodeDetector: ZXing als Fallback.
+          if(mdScanStream){mdScanStream.getTracks().forEach(t=>t.stop());mdScanStream=null;scannerVideo.srcObject=null;}
+          const reader=new ZXingBrowser.BrowserMultiFormatReader();
+          mdScanActive=true;
+          scannerStatus.innerHTML='Kamera aktiv. <b>QR, DataMatrix oder Barcode ruhig und groß ins Bild halten.</b>';
+          mdZxingControls=await reader.decodeFromConstraints(
+            {video:{facingMode:{ideal:'environment'},width:{ideal:1920},height:{ideal:1080}}},
+            scannerVideo,
+            (result,error,controls)=>{
+              if(result&&String(result.getText?result.getText():result.text||'').trim()){
+                finishTopScan(String(result.getText?result.getText():result.text).trim());
+              }
+            }
+          );
+        }else{
+          throw new Error('Kamera funktioniert, aber keine automatische Code-Erkennung ist verfügbar. Bitte den Code manuell eingeben.');
+        }
+      }catch(e){
+        stopTopScanner(false);
+        scannerStatus.innerHTML='<b>Scanner nicht verfügbar:</b> '+escapeScanner(String(e.message||e))+'<br>Die manuelle Eingabe funktioniert weiterhin.';
+      }
+    }
+    async function scanTopFrame(){
+      if(!mdScanActive||!mdScanDetector)return;
+      try{
+        const codes=await mdScanDetector.detect(scannerVideo);
+        if(codes&&codes.length&&String(codes[0].rawValue||'').trim()){
+          finishTopScan(String(codes[0].rawValue).trim());return;
+        }
+      }catch(e){}
+      if(mdScanActive)setTimeout(scanTopFrame,160);
+    }
+    function finishTopScan(raw){
+      stopTopScanner();
+      scannerOverlay.classList.remove('show');
+      if(mdScanRequester){try{mdScanRequester.postMessage({type:'MD_SCAN_RESULT',raw:raw},'*')}catch(e){}}
+      else {const frame=document.getElementById('messdienstFrame');if(frame&&frame.contentWindow)frame.contentWindow.postMessage({type:'MD_SCAN_RESULT',raw:raw},'*');}
+      mdScanRequester=null;
+    }
+    function cancelTopScan(){
+      stopTopScanner();scannerOverlay.classList.remove('show');
+      if(mdScanRequester){try{mdScanRequester.postMessage({type:'MD_SCAN_RESULT',cancelled:true},'*')}catch(e){}}
+      else {const frame=document.getElementById('messdienstFrame');if(frame&&frame.contentWindow)frame.contentWindow.postMessage({type:'MD_SCAN_RESULT',cancelled:true},'*');}
+      mdScanRequester=null;
+    }
+    function stopTopScanner(clearVideo=true){
+      mdScanActive=false;mdScanDetector=null;
+      if(mdZxingControls){try{mdZxingControls.stop()}catch(e){}mdZxingControls=null;}
+      if(mdScanStream){mdScanStream.getTracks().forEach(t=>t.stop());mdScanStream=null;}
+      if(clearVideo)scannerVideo.srcObject=null;
+    }
+    function escapeScanner(v){return String(v||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+    document.getElementById('scannerCancel').addEventListener('click',cancelTopScan);
+    document.getElementById('scannerManual').addEventListener('click',()=>{const raw=prompt('Code manuell eingeben:');if(raw)finishTopScan(raw)});
+
+</script>
 
 
 </body>
