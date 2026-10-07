@@ -1,7 +1,7 @@
 /* =========================================================
    MESSDIENST – SERVICE WORKER
    Feuerwehr St. Pölten-Stadt
-   Version: 7.0.0-rc5
+   Version: 7.0.0-rc6
    Stand: 08.10.2026
 
    Aufgabe:
@@ -18,7 +18,7 @@
    ========================================================= */
 
 const CACHE_PREFIX = 'messdienst-';
-const CACHE_NAME = 'messdienst-v7-rc5-20261008';
+const CACHE_NAME = 'messdienst-v7-rc6-20261008';
 
 const CACHE_FILES = [
   './',
