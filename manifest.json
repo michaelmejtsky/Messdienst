@@ -9,17 +9,7 @@
   "background_color": "#f4f6fa",
   "theme_color": "#25346f",
   "icons": [
-    {
-      "src": "./messdienst-icon.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "./messdienst-icon.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
-    }
+    {"src":"./messdienst-icon.png","sizes":"512x512","type":"image/png","purpose":"any"},
+    {"src":"./messdienst-icon.png","sizes":"512x512","type":"image/png","purpose":"maskable"}
   ]
 }
