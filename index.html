@@ -1262,7 +1262,7 @@
 
           navigator.serviceWorker
             .register(
-              './sw.js?v=20261008-v7-rc6'
+              './sw.js?v=20261011-rc810-security'
             )
 
             .then(
@@ -1309,12 +1309,41 @@
     const scannerStatus=document.getElementById('scannerStatus');
     const scannerTitle=document.getElementById('scannerTitle');
 
+    // Die Apps-Script-Benutzeroberfläche liegt ggf. in einem verschachtelten
+    // Google-iframe. Darum prüfen wir die tatsächliche GOOGLE-Herkunft,
+    // nicht pauschal frame.contentWindow (würde den echten Scanner blockieren).
+    function isTrustedAppsScriptScannerOrigin(origin){
+      try{
+        const url=new URL(origin);
+        const host=url.hostname.toLowerCase();
+        return url.protocol==='https:' && (
+          host==='script.google.com' ||
+          host==='script.googleusercontent.com' ||
+          host.endsWith('.googleusercontent.com')
+        );
+      }catch(e){return false;}
+    }
     window.addEventListener('message', event => {
-      const data=event.data||{};
-      if(data.type!=='MD_SCAN_REQUEST') return;
-      mdScanRequester=event.source||null;
-      openTopScanner(data.label||'Code scannen');
+      const data=event.data;
+      if(!data||typeof data!=='object'||data.type!=='MD_SCAN_REQUEST')return;
+      if(!isTrustedAppsScriptScannerOrigin(event.origin))return;
+      const requestId=String(data.requestId||'');
+      if(!/^[a-f0-9]{32}$/.test(requestId))return;
+      if(!event.source||typeof event.source.postMessage!=='function')return;
+      mdScanRequester={source:event.source,origin:event.origin,requestId:requestId};
+      openTopScanner(String(data.label||'Code scannen').slice(0,120));
     });
+    function replyToAppsScriptScanner(data){
+      const requester=mdScanRequester;
+      mdScanRequester=null;
+      if(!requester)return;
+      try{
+        requester.source.postMessage(
+          Object.assign({type:'MD_SCAN_RESULT',requestId:requester.requestId},data),
+          requester.origin
+        );
+      }catch(e){console.warn('Messdienst: Scanner-Antwort konnte nicht zugestellt werden.');}
+    }
 
     async function openTopScanner(label){
       stopTopScanner();
@@ -1376,15 +1405,12 @@
     function finishTopScan(raw){
       stopTopScanner();
       scannerOverlay.classList.remove('show');
-      if(mdScanRequester){try{mdScanRequester.postMessage({type:'MD_SCAN_RESULT',raw:raw},'*')}catch(e){}}
-      else {const frame=document.getElementById('messdienstFrame');if(frame&&frame.contentWindow)frame.contentWindow.postMessage({type:'MD_SCAN_RESULT',raw:raw},'*');}
-      mdScanRequester=null;
+      replyToAppsScriptScanner({raw:String(raw||'').slice(0,2048)});
     }
     function cancelTopScan(){
-      stopTopScanner();scannerOverlay.classList.remove('show');
-      if(mdScanRequester){try{mdScanRequester.postMessage({type:'MD_SCAN_RESULT',cancelled:true},'*')}catch(e){}}
-      else {const frame=document.getElementById('messdienstFrame');if(frame&&frame.contentWindow)frame.contentWindow.postMessage({type:'MD_SCAN_RESULT',cancelled:true},'*');}
-      mdScanRequester=null;
+      stopTopScanner();
+      scannerOverlay.classList.remove('show');
+      replyToAppsScriptScanner({cancelled:true});
     }
     function stopTopScanner(clearVideo=true){
       mdScanActive=false;mdScanDetector=null;
